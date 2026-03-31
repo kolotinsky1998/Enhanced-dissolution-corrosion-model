@@ -1,0 +1,46 @@
+\documentclass[tikz,border=6pt]{standalone}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage[version=4]{mhchem}
+
+\begin{document}
+\begin{tikzpicture}[x=1cm,y=1cm,>=latex]
+    \definecolor{steelgray}{RGB}{222,222,222}
+    \definecolor{leadblue}{RGB}{232,233,251}
+
+    \fill[steelgray] (0,0) rectangle (3.2,5.8);
+    \fill[leadblue] (3.2,0) rectangle (13.0,5.8);
+    \draw[line width=0.8pt] (0,0) rectangle (3.2,5.8);
+    \draw[line width=0.8pt] (3.2,0) rectangle (13.0,5.8);
+
+    \draw[densely dashed, gray!70, line width=0.6pt] (3.2,-0.2) -- (3.2,6.0);
+    \draw[densely dashed, gray!70, line width=0.6pt] (13.0,-0.2) -- (13.0,6.0);
+    \draw[->, line width=0.8pt] (2.1,6.25) -- (12.2,6.25);
+    \node[anchor=west] at (12.35,6.25) {$z$};
+
+    \node[align=center] at (1.6,3.6) {\fontsize{18}{21}\selectfont Сталь\\[0.2em]Fe};
+    \node[align=center] at (8.1,5.15) {\fontsize{18}{20}\selectfont Жидкий свинец\\[0.15em]диффузионный слой};
+
+    \draw[->, line width=0.8pt] (4.55,3.95) -- (3.35,3.95);
+    \node[anchor=west] at (5.05,4.03) {$J_{O}(0,t)=0$};
+
+    \draw[->, line width=0.8pt] (4.55,2.95) -- (3.35,2.95);
+    \node[anchor=west] at (5.05,3.03) {$J_{Fe}(0,t)=K_{Fe}(T)\bigl(C_{Fe}^{s}(T)-C_{Fe}(0,t)\bigr)$};
+
+    \draw[->, line width=0.8pt] (11.35,3.95) -- (12.85,3.95);
+    \node[anchor=east] at (10.95,4.52) {\small $C_{O}(l,t)=C_{O}^{\mathrm{bulk}}=C_{O}^{s}(T)$};
+
+    \draw[->, line width=0.8pt] (11.35,2.95) -- (12.85,2.95);
+    \node[anchor=east] at (10.95,2.58) {\small $C_{Fe}(l,t)=C_{Fe}^{\mathrm{bulk}}$};
+
+    \node[align=center] at (8.1,1.28) {\fontsize{14}{17}\selectfont
+    $\text{при } C_{O}^{4}C_{Fe}^{3}>K_{Fe_{3}O_{4}}(T)$\\[0.2em]
+    мгновенное осаждение $\ce{Fe3O4}$};
+
+    \node[anchor=north] at (3.2,-0.32) {$z=0$};
+    \node[anchor=north] at (13.0,-0.32) {$z=l$};
+\end{tikzpicture}
+\end{document}
