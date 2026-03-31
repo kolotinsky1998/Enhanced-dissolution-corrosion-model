@@ -1,0 +1,64 @@
+% ============================================================
+%  example.tex — демонстрационный документ для конвертации в docx
+%  Сборка PDF:   pdflatex example && bibtex example && pdflatex example && pdflatex example
+%  Конвертация:  см. convert.sh  /  README.md
+% ============================================================
+\documentclass[12pt, a4paper]{article}
+%
+% --- Кодировки и язык ---
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+\usepackage{cmap}
+
+% --- Математика ---
+\usepackage{amsmath, amssymb}
+
+% --- Физические величины ---
+%\usepackage[exponent-product = \cdot, output-decimal-marker = {,}]{siunitx}
+%\input{siunitx-local-units}
+\usepackage[version=4]{mhchem}
+
+% --- Рисунки ---
+\usepackage{graphicx}
+
+% --- Библиография ---
+\usepackage[backend=biber, style=gost-numeric, natbib=true]{biblatex}
+\addbibresource{main.bib}
+
+% --- Гиперссылки и перекрёстные ссылки ---
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=blue]{hyperref}
+\usepackage{cleveref}     % Обычно загружается последним
+
+
+\DeclareUnicodeCharacter{21CC}{\ensuremath{\rightleftharpoons}}
+
+
+% ============================================================
+%  Метаданные документа
+% ============================================================
+\title{Модель начального этапа окисление железа в жидком свинце}
+\author{Даниил Колотинский\thanks{ОИВТ РАН,
+        \texttt{kolotinskiy.da@phystech.edu}}}
+\date{\today}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Теория}
+\label{sec:intro}
+
+\printbibliography
+
+\end{document}
