@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Модель начального окисления железа в жидком свинце</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --paper: rgba(255, 252, 246, 0.9);
+      --paper-strong: rgba(255, 252, 246, 0.97);
+      --ink: #1f2430;
+      --muted: #555d6d;
+      --accent: #9f3a2f;
+      --accent-soft: rgba(159, 58, 47, 0.12);
+      --steel: #5d6d7e;
+      --lead: #cfd5df;
+      --shadow: 0 22px 60px rgba(36, 28, 21, 0.14);
+      --radius: 24px;
+      --slide-w: min(1280px, 94vw);
+      --slide-h: min(760px, 88vh);
+      --border: 1px solid rgba(48, 53, 66, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(159, 58, 47, 0.10), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(70, 85, 120, 0.12), transparent 30%),
+        linear-gradient(180deg, #f8f4ec 0%, #efe7da 100%);
+      color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Noto Serif", serif;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(88, 85, 77, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88, 85, 77, 0.04) 1px, transparent 1px);
+      background-size: 36px 36px;
+      pointer-events: none;
+      mask-image: radial-gradient(circle at center, black 48%, transparent 92%);
+    }
+
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+    }
+
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 5px;
+      width: 100%;
+      background: rgba(60, 61, 68, 0.1);
+      z-index: 50;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent) 0%, #d18a45 100%);
+      transition: width 0.25s ease;
+    }
+
+    .slide {
+      display: none;
+      width: var(--slide-w);
+      height: var(--slide-h);
+      background: var(--paper);
+      border: var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 38px 44px 34px;
+      backdrop-filter: blur(18px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(159, 58, 47, 0.10), transparent 70%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      font-family: "Helvetica Neue", "Arial", sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 12px;
+      color: var(--accent);
+      margin: 0;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.08;
+      font-weight: 700;
+    }
+
+    h1 {
+      font-size: clamp(34px, 4.1vw, 64px);
+      max-width: 14ch;
+    }
+
+    h2 {
+      font-size: clamp(24px, 2.5vw, 38px);
+      max-width: 18ch;
+    }
+
+    h3 {
+      font-size: 22px;
+    }
+
+    p,
+    li {
+      font-size: 19px;
+      line-height: 1.42;
+      margin: 0;
+      color: var(--ink);
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 1.25em;
+      display: grid;
+      gap: 10px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .title-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 28px;
+      height: 100%;
+      align-items: stretch;
+    }
+
+    .title-panel,
+    .hero-card,
+    .card,
+    .formula-card,
+    .figure-card {
+      border-radius: 22px;
+      background: var(--paper-strong);
+      border: var(--border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+
+    .title-panel {
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        linear-gradient(165deg, rgba(159, 58, 47, 0.10), rgba(255, 252, 246, 0.94) 32%),
+        var(--paper-strong);
+    }
+
+    .hero-card {
+      padding: 26px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 18px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .meta-item,
+    .tag {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(93, 109, 126, 0.08);
+      border: 1px solid rgba(93, 109, 126, 0.16);
+      font-family: "Helvetica Neue", "Arial", sans-serif;
+    }
+
+    .meta-item strong {
+      display: block;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .meta-item span,
+    .tag {
+      font-size: 16px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 24px;
+      min-height: 0;
+      flex: 1 1 auto;
+    }
+
+    .split.equal {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .stack {
+      display: grid;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .card,
+    .formula-card,
+    .figure-card {
+      padding: 22px 24px;
+    }
+
+    .card h3,
+    .formula-card h3,
+    .figure-card h3 {
+      margin-bottom: 10px;
+    }
+
+    .formula-card {
+      background:
+        linear-gradient(180deg, rgba(159, 58, 47, 0.05), rgba(255, 252, 246, 0.96)),
+        var(--paper-strong);
+    }
+
+    .formula {
+      font-size: 24px;
+      line-height: 1.45;
+      margin: 10px 0 0;
+    }
+
+    .diagram {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 16px;
+      background: #f8f8fb;
+    }
+
+    .figure-grid-2,
+    .figure-grid-3,
+    .figure-grid-4 {
+      display: grid;
+      gap: 14px;
+      min-height: 0;
+      flex: 1 1 auto;
+    }
+
+    .figure-grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .figure-grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .figure-grid-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+
+    figure {
+      margin: 0;
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      gap: 8px;
+    }
+
+    figure img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 16px;
+      border: 1px solid rgba(54, 60, 72, 0.10);
+      background: #ffffff;
+    }
+
+    figcaption {
+      font-size: 13px;
+      line-height: 1.35;
+      color: var(--muted);
+      font-family: "Helvetica Neue", "Arial", sans-serif;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tag {
+      background: var(--accent-soft);
+      border-color: rgba(159, 58, 47, 0.18);
+    }
+
+    .case-grid {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 24px;
+      min-height: 0;
+      flex: 1 1 auto;
+    }
+
+    .case-summary {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .case-summary .tag {
+      width: fit-content;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .compare-grid .card {
+      padding: 18px 18px 20px;
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      font-family: "Helvetica Neue", "Arial", sans-serif;
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: auto;
+    }
+
+    .controls {
+      position: fixed;
+      right: 24px;
+      bottom: 22px;
+      display: flex;
+      gap: 10px;
+      z-index: 60;
+    }
+
+    .controls button {
+      appearance: none;
+      border: none;
+      border-radius: 999px;
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 252, 246, 0.9);
+      color: var(--ink);
+      font-size: 22px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .controls button:hover {
+      transform: translateY(-1px);
+      background: #fffdf9;
+    }
+
+    .small {
+      font-size: 16px;
+    }
+
+    .compact p,
+    .compact li {
+      font-size: 17px;
+    }
+
+    .mjx-chtml {
+      font-size: 108% !important;
+    }
+
+    @media (max-width: 1100px) {
+      .slide {
+        padding: 28px;
+      }
+
+      .title-layout,
+      .split,
+      .split.equal,
+      .case-grid,
+      .compare-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .figure-grid-2,
+      .figure-grid-3,
+      .figure-grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .deck {
+        padding: 18px;
+      }
+
+      body {
+        overflow: auto;
+      }
+
+      .slide {
+        height: auto;
+        min-height: 92vh;
+      }
+    }
+
+    @media print {
+      body {
+        overflow: visible;
+        background: white;
+      }
+
+      .deck {
+        display: block;
+        padding: 0;
+      }
+
+      .slide {
+        display: flex !important;
+        width: 100%;
+        min-height: 100vh;
+        height: auto;
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        page-break-after: always;
+      }
+
+      .controls,
+      .progress {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+
+  <main class="deck">
+    <section class="slide active" data-title="Титульный слайд">
+      <div class="title-layout">
+        <div class="title-panel">
+          <div class="stack">
+            <p class="eyebrow">HTML-презентация по текущему тексту статьи</p>
+            <h1>Модель начального окисления железа в жидком свинце</h1>
+            <p>
+              Одномерная нестационарная постановка для системы «сталь–свинец» с
+              диффузионным переносом растворённых кислорода и железа, мгновенным
+              образованием \(\mathrm{Fe_3O_4}\) и анализом эволюции реакционного фронта.
+            </p>
+          </div>
+          <div class="tags">
+            <span class="tag">\(T = 620\,^\circ\mathrm{C}\)</span>
+            <span class="tag">\(l = 10^{-4}\,\mathrm{м}\)</span>
+            <span class="tag">1D FiPy</span>
+            <span class="tag">Жидкий свинец Pb</span>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div>
+            <h2>Что входит в презентацию</h2>
+            <p class="muted small">
+              Постановка задачи, основные уравнения, термодинамические критерии и
+              вся серия численных результатов для шести значений \(C_O^{bulk}\).
+            </p>
+          </div>
+          <div class="meta-grid">
+            <div class="meta-item">
+              <strong>Компоненты</strong>
+              <span>\(C_O(z,t)\), \(C_{Fe}(z,t)\)</span>
+            </div>
+            <div class="meta-item">
+              <strong>Граница \(z=0\)</strong>
+              <span>сталь, кинетический поток Fe</span>
+            </div>
+            <div class="meta-item">
+              <strong>Граница \(z=l\)</strong>
+              <span>заданные \(C_O^{bulk}\) и \(C_{Fe}^{bulk}\)</span>
+            </div>
+            <div class="meta-item">
+              <strong>Оксид</strong>
+              <span>мгновенное выпадение \(\mathrm{Fe_3O_4}\)</span>
+            </div>
+          </div>
+          <p class="muted small">
+            Навигация: стрелки клавиатуры, пробел, кнопки внизу справа.
+          </p>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Авторский материал на основе [main.tex]</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Аннотация">
+      <p class="eyebrow">Аннотация</p>
+      <h2>Ключевой физический результат</h2>
+      <div class="split equal">
+        <div class="card">
+          <p>
+            Рассматривается одномерная нестационарная модель начального этапа
+            окисления железа в жидком свинце при наличии растворённого кислорода,
+            концентрация которого поддерживается на внешней границе диффузионного слоя.
+          </p>
+          <p style="margin-top: 12px;">
+            Модель включает уравнения диффузионного переноса кислорода и железа,
+            кинетическое условие растворения железа на поверхности стали и
+            термодинамический критерий мгновенного образования
+            \(\mathrm{Fe_3O_4}\) с удалением твёрдой фазы из системы.
+          </p>
+        </div>
+        <div class="card">
+          <p>
+            Для температуры \(620\,^\circ\mathrm{C}\) выполнены расчёты при
+            различных значениях \(C_O^{bulk}\). Показано, что рост содержания
+            кислорода переводит систему от режима отсутствия магнетита к режимам,
+            где оксидообразование определяет эволюцию концентрационных профилей.
+          </p>
+          <p style="margin-top: 12px;">
+            При увеличении \(C_O^{bulk}\) область максимального оттока магнетита
+            последовательно смещается от внешней границы диффузионного слоя к
+            поверхности стали, а при насыщении свинца по кислороду локализуется
+            непосредственно у межфазной границы.
+          </p>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Модель начального окисления железа в Pb</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Система">
+      <p class="eyebrow">Постановка задачи</p>
+      <h2>Геометрия и физический смысл модели</h2>
+      <div class="split">
+        <div class="stack">
+          <div class="card compact">
+            <h3>Область расчёта</h3>
+            <ul>
+              <li>Координата \(z\) отсчитывается по нормали к поверхности стали.</li>
+              <li>\(z=0\) соответствует межфазной границе «сталь–свинец».</li>
+              <li>\(z=l\) соответствует внешней границе диффузионного слоя в жидком свинце.</li>
+              <li>Конвекция учитывается неявно через конечную толщину слоя и граничные условия.</li>
+            </ul>
+          </div>
+          <div class="card compact">
+            <h3>Переменные модели</h3>
+            <ul>
+              <li>\(C_O(z,t)\) — концентрация растворённого кислорода.</li>
+              <li>\(C_{Fe}(z,t)\) — концентрация растворённого железа.</li>
+              <li>Твёрдофазный магнетит не накапливается: он мгновенно удаляется из системы.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="figure-card">
+          <h3>Схема расчётной области</h3>
+          <img class="diagram" src="diagram.png" alt="Схема модели" />
+        </div>
+      </div>
+      <div class="footer">
+        <span>Одномерная диффузионная постановка</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Допущения">
+      <p class="eyebrow">Постановка задачи</p>
+      <h2>Основные допущения</h2>
+      <div class="compare-grid">
+        <div class="card compact">
+          <h3>Кинематика</h3>
+          <ul>
+            <li>Задача одномерная.</li>
+            <li>Температура постоянна во всей системе.</li>
+            <li>Рассматриваются только \(O\) и \(Fe\) в растворе.</li>
+          </ul>
+        </div>
+        <div class="card compact">
+          <h3>Оксидообразование</h3>
+          <ul>
+            <li>Осаждение \(\mathrm{Fe_3O_4}\) мгновенное.</li>
+            <li>Кинетическое сопротивление осаждению не учитывается.</li>
+            <li>Локально пересыщенные состояния сразу проектируются на линию равновесия.</li>
+          </ul>
+        </div>
+        <div class="card compact">
+          <h3>Граница стали</h3>
+          <ul>
+            <li>Поглощение кислорода сталью на начальном этапе пренебрегается.</li>
+            <li>Растворение железа задаётся кинетическим законом межфазного обмена.</li>
+            <li>Рост сплошной оксидной плёнки не рассматривается.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Модель нацелена на начальную стадию процесса</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Уравнения">
+      <p class="eyebrow">Математическая модель</p>
+      <h2>Уравнения переноса и граничные условия</h2>
+      <div class="split equal">
+        <div class="formula-card">
+          <h3>Диффузионные уравнения</h3>
+          <div class="formula">
+            \[
+            \frac{\partial C_O}{\partial t}
+            =
+            D_O(T)\frac{\partial^2 C_O}{\partial z^2},
+            \qquad
+            \frac{\partial C_{Fe}}{\partial t}
+            =
+            D_{Fe}(T)\frac{\partial^2 C_{Fe}}{\partial z^2}.
+            \]
+          </div>
+          <p class="small muted">
+            Внутри слоя \(0&lt;z&lt;l\) перенос обоих компонентов считается чисто диффузионным.
+          </p>
+        </div>
+        <div class="formula-card">
+          <h3>Граничные условия</h3>
+          <div class="formula">
+            \[
+            J_O(0,t)= -D_O(T)\left.\frac{\partial C_O}{\partial z}\right|_{z=0}=0,
+            \]
+            \[
+            J_{Fe}(0,t)= -D_{Fe}(T)\left.\frac{\partial C_{Fe}}{\partial z}\right|_{z=0}
+            =K_{Fe}(T)\bigl(C_{Fe}^{s}(T)-C_{Fe}(0,t)\bigr),
+            \]
+            \[
+            C_O(l,t)=C_O^{bulk},
+            \qquad
+            C_{Fe}(l,t)=C_{Fe}^{bulk}.
+            \]
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Поток кислорода на стали принят нулевым</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Термодинамика">
+      <p class="eyebrow">Математическая модель</p>
+      <h2>Температурные зависимости и критерий магнетита</h2>
+      <div class="split equal">
+        <div class="formula-card">
+          <h3>Насыщение и коэффициенты</h3>
+          <div class="formula">
+            \[
+            C_O^{s}(T)=10^{\,3.21-\frac{5100}{T}}\frac{\rho_{Pb}(T)}{100\,m_O},
+            \]
+            \[
+            C_{Fe}^{s}(T)=10^{\,1.824-\frac{4860}{T}}\frac{\rho_{Pb}(T)}{100\,m_{Fe}},
+            \]
+            \[
+            \rho_{Pb}(T)=11441-1.2795\,T,
+            \]
+            \[
+            D_O(T)=10^{-4}\cdot 2.79\times10^{-3}\exp\!\left(-\frac{45587}{RT}\right),
+            \]
+            \[
+            D_{Fe}(T)=4.898\times 10^{-7}\exp\!\left(-\frac{43934.77}{8.31\,T}\right),
+            \]
+            \[
+            K_{Fe}(T)=\frac{1.22\times10^{-4}\exp\!\left(-\frac{9418}{RT}\right)}{C_{Fe}^{s}(T)}.
+            \]
+          </div>
+        </div>
+        <div class="formula-card">
+          <h3>Условие осаждения \(\mathrm{Fe_3O_4}\)</h3>
+          <div class="formula">
+            \[
+            C_O^4(z,t)\,C_{Fe}^3(z,t) > K_{Fe_3O_4}(T).
+            \]
+            \[
+            \bigl(C_O^{new}\bigr)^4\bigl(C_{Fe}^{new}\bigr)^3
+            =
+            K_{Fe_3O_4}(T),
+            \]
+            \[
+            C_O-C_O^{new}
+            =
+            \frac{4}{3}\Bigl(C_{Fe}-C_{Fe}^{new}\Bigr).
+            \]
+          </div>
+          <p class="small muted">
+            Как только локальное состояние выходит в область устойчивости магнетита,
+            избыток железа и кислорода немедленно связывается в твёрдую фазу.
+          </p>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Все ключевые параметры зависят от температуры</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Численные условия">
+      <p class="eyebrow">Расчётная серия</p>
+      <h2>Условия численного эксперимента</h2>
+      <div class="split equal">
+        <div class="card compact">
+          <h3>Общие параметры</h3>
+          <ul>
+            <li>Температура: \(T=620\,^\circ\mathrm{C}\).</li>
+            <li>Толщина диффузионного слоя: \(l=10^{-4}\,\mathrm{м}\).</li>
+            <li>Варьируется только \(C_O^{bulk}\).</li>
+            <li>\(C_{Fe}^{bulk}\) вычисляется на линии устойчивости магнетита с ограничением сверху \(C_{Fe}^{s}(T)\).</li>
+          </ul>
+        </div>
+        <div class="card compact">
+          <h3>Набор рассмотренных режимов</h3>
+          <ul>
+            <li>\(3.161\times10^{-10}\) масс. %</li>
+            <li>\(3.161\times10^{-7}\) масс. %</li>
+            <li>\(3.161\times10^{-6}\) масс. %</li>
+            <li>\(3.161\times10^{-5}\) масс. %</li>
+            <li>\(3.161\times10^{-4}\) масс. %</li>
+            <li>\(3.161\times10^{-3}\) масс. %</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Результаты приведены в порядке возрастания \(C_O^{bulk}\)</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-10">
+      <p class="eyebrow">Результаты</p>
+      <h2>Случай \(C_O^{bulk}=3.161\times10^{-10}\) масс. %</h2>
+      <div class="case-grid">
+        <div class="case-summary">
+          <span class="tag">Магнетит неустойчив</span>
+          <div class="card compact">
+            <p>
+              При столь низкой концентрации кислорода твёрдофазный магнетит
+              неустойчив даже при концентрации железа, равной его насыщению в свинце.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Кислород и железо переносятся независимо, а отток
+              \(\mathrm{Fe_3O_4}\) отсутствует во всей области.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Нестационарные и стационарные профили описывают только диффузионное
+              перераспределение растворённых компонентов.
+            </p>
+          </div>
+        </div>
+        <div class="figure-grid-4">
+          <figure>
+            <img src="data_CO=3.161e-10/stationary_concentrations.png" alt="Стационарные концентрации" />
+            <figcaption>Стационарные профили \(C_{Fe}\) и \(C_O\).</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-10/stationary_fe3o4_flux.png" alt="Стационарный поток магнетита" />
+            <figcaption>Локальный поток \(\mathrm{Fe_3O_4}\) равен нулю.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-10/boundary_concentrations_vs_time.png" alt="Граничные концентрации" />
+            <figcaption>Граничные концентрации меняются без оксидообразования.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-10/integral_fe3o4_flux_vs_time.png" alt="Интегральный отток магнетита" />
+            <figcaption>Интегральный отток \(\mathrm{Fe_3O_4}\) отсутствует.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Режим независимого переноса железа и кислорода</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-10 динамика">
+      <p class="eyebrow">Результаты</p>
+      <h2>Нестационарная эволюция при \(C_O^{bulk}=3.161\times10^{-10}\) масс. %</h2>
+      <div class="figure-grid-3">
+        <figure>
+          <img src="data_CO=3.161e-10/unsteady_fe_profiles.png" alt="Нестационарные профили железа" />
+          <figcaption>Эволюция профилей растворённого железа.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-10/unsteady_o_profiles.png" alt="Нестационарные профили кислорода" />
+          <figcaption>Эволюция профилей растворённого кислорода.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-10/unsteady_fe3o4_flux_profiles.png" alt="Нестационарный поток магнетита" />
+          <figcaption>Локальный поток магнетита во времени остаётся нулевым.</figcaption>
+        </figure>
+      </div>
+      <div class="footer">
+        <span>Оксидная фаза не формируется</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-7">
+      <p class="eyebrow">Результаты</p>
+      <h2>Случай \(C_O^{bulk}=3.161\times10^{-7}\) масс. %</h2>
+      <div class="case-grid">
+        <div class="case-summary">
+          <span class="tag">Появление магнетита</span>
+          <div class="card compact">
+            <p>
+              Магнетит становится устойчивым уже при концентрации железа,
+              равной его насыщению в свинце.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Отток \(\mathrm{Fe_3O_4}\) становится ненулевым, а перенос железа и
+              кислорода связывается через локальное выпадение твёрдой фазы.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Локальный поток магнетита имеет два максимума: у границы со сталью
+              и вблизи внешней границы, где поддерживается кислород.
+            </p>
+          </div>
+        </div>
+        <div class="figure-grid-4">
+          <figure>
+            <img src="data_CO=3.161e-7/stationary_concentrations.png" alt="Стационарные концентрации" />
+            <figcaption>Стационарные профили \(C_{Fe}\) и \(C_O\).</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-7/stationary_fe3o4_flux.png" alt="Стационарный поток магнетита" />
+            <figcaption>Появляется ненулевой локальный поток магнетита.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-7/boundary_concentrations_vs_time.png" alt="Граничные концентрации" />
+            <figcaption>Граничные концентрации перестраиваются сильнее, чем в предыдущем режиме.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-7/integral_fe3o4_flux_vs_time.png" alt="Интегральный отток магнетита" />
+            <figcaption>Интегральный отток магнетита становится отличным от нуля.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Первый режим с образованием \(\mathrm{Fe_3O_4}\)</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-7 динамика">
+      <p class="eyebrow">Результаты</p>
+      <h2>Нестационарная эволюция при \(C_O^{bulk}=3.161\times10^{-7}\) масс. %</h2>
+      <div class="figure-grid-3">
+        <figure>
+          <img src="data_CO=3.161e-7/unsteady_fe_profiles.png" alt="Нестационарные профили железа" />
+          <figcaption>Эволюция профилей растворённого железа.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-7/unsteady_o_profiles.png" alt="Нестационарные профили кислорода" />
+          <figcaption>Эволюция профилей растворённого кислорода.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-7/unsteady_fe3o4_flux_profiles.png" alt="Нестационарный поток магнетита" />
+          <figcaption>Два максимума локального оттока \(\mathrm{Fe_3O_4}\).</figcaption>
+        </figure>
+      </div>
+      <div class="footer">
+        <span>Оксидообразование уже влияет на профили компонентов</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-6">
+      <p class="eyebrow">Результаты</p>
+      <h2>Случай \(C_O^{bulk}=3.161\times10^{-6}\) масс. %</h2>
+      <div class="case-grid">
+        <div class="case-summary">
+          <span class="tag">Фронт реакции у кислородной границы</span>
+          <div class="card compact">
+            <p>
+              Образование твёрдофазного магнетита заметно активизируется и
+              охватывает всю область моделирования.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Поток кислорода к стали всё ещё существенно меньше потока железа
+              от стали к внешней границе слоя.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Локальный отток \(\mathrm{Fe_3O_4}\) имеет один выраженный максимум
+              вблизи границы поддержания кислорода, который можно трактовать как реакционный фронт.
+            </p>
+          </div>
+        </div>
+        <div class="figure-grid-4">
+          <figure>
+            <img src="data_CO=3.161e-6/stationary_concentrations.png" alt="Стационарные концентрации" />
+            <figcaption>Стационарные концентрационные профили.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-6/stationary_fe3o4_flux.png" alt="Стационарный поток магнетита" />
+            <figcaption>Один выраженный максимум локального оттока.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-6/boundary_concentrations_vs_time.png" alt="Граничные концентрации" />
+            <figcaption>Эволюция граничных концентраций на поверхности стали.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-6/integral_fe3o4_flux_vs_time.png" alt="Интегральный отток магнетита" />
+            <figcaption>Интегральный отток \(\mathrm{Fe_3O_4}\) возрастает.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Реакционный фронт ещё локализован у кислородной границы</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-6 динамика">
+      <p class="eyebrow">Результаты</p>
+      <h2>Нестационарная эволюция при \(C_O^{bulk}=3.161\times10^{-6}\) масс. %</h2>
+      <div class="figure-grid-3">
+        <figure>
+          <img src="data_CO=3.161e-6/unsteady_fe_profiles.png" alt="Нестационарные профили железа" />
+          <figcaption>Эволюция профилей растворённого железа.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-6/unsteady_o_profiles.png" alt="Нестационарные профили кислорода" />
+          <figcaption>Эволюция профилей растворённого кислорода.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-6/unsteady_fe3o4_flux_profiles.png" alt="Нестационарный поток магнетита" />
+          <figcaption>Становление фронта наиболее интенсивного оксидообразования.</figcaption>
+        </figure>
+      </div>
+      <div class="footer">
+        <span>Перенос железа всё ещё доминирует над переносом кислорода</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-5">
+      <p class="eyebrow">Результаты</p>
+      <h2>Случай \(C_O^{bulk}=3.161\times10^{-5}\) масс. %</h2>
+      <div class="case-grid">
+        <div class="case-summary">
+          <span class="tag">Смещение фронта к стали</span>
+          <div class="card compact">
+            <p>
+              По сравнению с предыдущим случаем возрастают и поток, и концентрации кислорода.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Это усиливает образование магнетита и делает влияние оксидообразования
+              на распределения компонентов более заметным.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Фронт реакции начинает смещаться от внешней границы слоя в сторону поверхности стали.
+            </p>
+          </div>
+        </div>
+        <div class="figure-grid-4">
+          <figure>
+            <img src="data_CO=3.161e-5/stationary_concentrations.png" alt="Стационарные концентрации" />
+            <figcaption>Стационарные профили растворённых компонентов.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-5/stationary_fe3o4_flux.png" alt="Стационарный поток магнетита" />
+            <figcaption>Максимум локального потока начинает сдвигаться к стали.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-5/boundary_concentrations_vs_time.png" alt="Граничные концентрации" />
+            <figcaption>Граничная динамика при повышенном содержании кислорода.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-5/integral_fe3o4_flux_vs_time.png" alt="Интегральный отток магнетита" />
+            <figcaption>Интегральный отток магнетита возрастает.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Переходный режим между «кислородной» и «стальной» локализацией фронта</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-5 динамика">
+      <p class="eyebrow">Результаты</p>
+      <h2>Нестационарная эволюция при \(C_O^{bulk}=3.161\times10^{-5}\) масс. %</h2>
+      <div class="figure-grid-3">
+        <figure>
+          <img src="data_CO=3.161e-5/unsteady_fe_profiles.png" alt="Нестационарные профили железа" />
+          <figcaption>Эволюция профилей железа.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-5/unsteady_o_profiles.png" alt="Нестационарные профили кислорода" />
+          <figcaption>Эволюция профилей кислорода.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-5/unsteady_fe3o4_flux_profiles.png" alt="Нестационарный поток магнетита" />
+          <figcaption>Реакционный фронт постепенно сдвигается к поверхности стали.</figcaption>
+        </figure>
+      </div>
+      <div class="footer">
+        <span>Кислород начинает играть заметно большую роль в формировании профилей</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-4">
+      <p class="eyebrow">Результаты</p>
+      <h2>Случай \(C_O^{bulk}=3.161\times10^{-4}\) масс. %</h2>
+      <div class="case-grid">
+        <div class="case-summary">
+          <span class="tag">Поток кислорода сопоставим с железом</span>
+          <div class="card compact">
+            <p>
+              Влияние кислорода на эволюцию системы становится ещё сильнее.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Поток кислорода уже немного больше потока железа, что отражает
+              рост роли кислородного переноса в поддержании магнетита.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Реакционный фронт смещается ближе к поверхности стали, чем к
+              границе поддержания кислорода.
+            </p>
+          </div>
+        </div>
+        <div class="figure-grid-4">
+          <figure>
+            <img src="data_CO=3.161e-4/stationary_concentrations.png" alt="Стационарные концентрации" />
+            <figcaption>Стационарные профили \(C_{Fe}\) и \(C_O\).</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-4/stationary_fe3o4_flux.png" alt="Стационарный поток магнетита" />
+            <figcaption>Максимум оттока магнетита уже расположен ближе к стали.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-4/boundary_concentrations_vs_time.png" alt="Граничные концентрации" />
+            <figcaption>Перенос кислорода становится определяющим для формы профилей.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-4/integral_fe3o4_flux_vs_time.png" alt="Интегральный отток магнетита" />
+            <figcaption>Интегральный отток продолжает увеличиваться.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Область оксидообразования уже заметно приближена к стали</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-4 динамика">
+      <p class="eyebrow">Результаты</p>
+      <h2>Нестационарная эволюция при \(C_O^{bulk}=3.161\times10^{-4}\) масс. %</h2>
+      <div class="figure-grid-3">
+        <figure>
+          <img src="data_CO=3.161e-4/unsteady_fe_profiles.png" alt="Нестационарные профили железа" />
+          <figcaption>Эволюция профилей железа.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-4/unsteady_o_profiles.png" alt="Нестационарные профили кислорода" />
+          <figcaption>Эволюция профилей кислорода.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-4/unsteady_fe3o4_flux_profiles.png" alt="Нестационарный поток магнетита" />
+          <figcaption>Реакционный фронт устойчиво локализуется ближе к стали.</figcaption>
+        </figure>
+      </div>
+      <div class="footer">
+        <span>Кислородный перенос уже немного преобладает над переносом железа</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-3">
+      <p class="eyebrow">Результаты</p>
+      <h2>Случай \(C_O^{bulk}=3.161\times10^{-3}\) масс. %</h2>
+      <div class="case-grid">
+        <div class="case-summary">
+          <span class="tag">Насыщение по кислороду</span>
+          <div class="card compact">
+            <p>
+              Концентрация растворённого кислорода на внешней границе равна
+              концентрации его насыщения в жидком свинце.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Поток кислорода существенно преобладает над потоком железа.
+            </p>
+          </div>
+          <div class="card compact">
+            <p>
+              Максимум оттока магнетита располагается непосредственно на границе со сталью,
+              что соответствует предельному смещению области наиболее интенсивного оксидообразования.
+            </p>
+          </div>
+        </div>
+        <div class="figure-grid-4">
+          <figure>
+            <img src="data_CO=3.161e-3/stationary_concentrations.png" alt="Стационарные концентрации" />
+            <figcaption>Стационарные распределения растворённых компонентов.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-3/stationary_fe3o4_flux.png" alt="Стационарный поток магнетита" />
+            <figcaption>Максимум локального оттока находится у поверхности стали.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-3/boundary_concentrations_vs_time.png" alt="Граничные концентрации" />
+            <figcaption>Граничные концентрации при насыщении свинца по кислороду.</figcaption>
+          </figure>
+          <figure>
+            <img src="data_CO=3.161e-3/integral_fe3o4_flux_vs_time.png" alt="Интегральный отток магнетита" />
+            <figcaption>Наиболее интенсивный интегральный отток магнетита.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="footer">
+        <span>Предельный по кислороду режим</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="CO=3.161e-3 динамика">
+      <p class="eyebrow">Результаты</p>
+      <h2>Нестационарная эволюция при \(C_O^{bulk}=3.161\times10^{-3}\) масс. %</h2>
+      <div class="figure-grid-3">
+        <figure>
+          <img src="data_CO=3.161e-3/unsteady_fe_profiles.png" alt="Нестационарные профили железа" />
+          <figcaption>Эволюция профилей железа.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-3/unsteady_o_profiles.png" alt="Нестационарные профили кислорода" />
+          <figcaption>Эволюция профилей кислорода.</figcaption>
+        </figure>
+        <figure>
+          <img src="data_CO=3.161e-3/unsteady_fe3o4_flux_profiles.png" alt="Нестационарный поток магнетита" />
+          <figcaption>Максимум локального потока магнетита формируется на стали.</figcaption>
+        </figure>
+      </div>
+      <div class="footer">
+        <span>Влияние оксидообразования максимально</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Сравнение режимов">
+      <p class="eyebrow">Сводка</p>
+      <h2>Сравнение рассмотренных режимов</h2>
+      <div class="compare-grid">
+        <div class="card compact">
+          <h3>Низкий \(C_O^{bulk}\)</h3>
+          <p>
+            При \(3.161\times10^{-10}\) масс. % магнетит неустойчив во всём объёме,
+            а перенос железа и кислорода протекает независимо.
+          </p>
+          <p style="margin-top: 10px;">
+            Уже при \(3.161\times10^{-7}\) масс. % появляется ненулевой отток
+            \(\mathrm{Fe_3O_4}\) и два максимума локального потока.
+          </p>
+        </div>
+        <div class="card compact">
+          <h3>Промежуточный диапазон</h3>
+          <p>
+            При \(3.161\times10^{-6}\) масс. % магнетит формируется во всём объёме,
+            а один выраженный максимум локального оттока возникает у кислородной границы.
+          </p>
+          <p style="margin-top: 10px;">
+            При \(3.161\times10^{-5}\) и \(3.161\times10^{-4}\) масс. % этот
+            реакционный фронт последовательно смещается к поверхности стали.
+          </p>
+        </div>
+        <div class="card compact">
+          <h3>Высокий \(C_O^{bulk}\)</h3>
+          <p>
+            При насыщении свинца по кислороду, \(3.161\times10^{-3}\) масс. %,
+            поток кислорода уже существенно преобладает над потоком железа.
+          </p>
+          <p style="margin-top: 10px;">
+            Максимум локального оттока магнетита располагается непосредственно
+            на границе «сталь–свинец».
+          </p>
+        </div>
+      </div>
+      <div class="card compact">
+        <p>
+          Вся серия расчётов демонстрирует закономерный переход от режима
+          отсутствия оксидной фазы к режиму, где образование \(\mathrm{Fe_3O_4}\)
+          становится определяющим фактором перераспределения компонентов. По мере
+          роста \(C_O^{bulk}\) возрастает интегральный отток магнетита и
+          происходит последовательное смещение области наиболее интенсивного
+          оксидообразования от внешней границы диффузионного слоя к поверхности стали.
+        </p>
+      </div>
+      <div class="footer">
+        <span>Главный тренд: смещение реакционного фронта к стали при росте кислорода</span>
+        <span class="slide-counter"></span>
+      </div>
+    </section>
+  </main>
+
+  <div class="controls">
+    <button type="button" id="prevBtn" aria-label="Предыдущий слайд">‹</button>
+    <button type="button" id="nextBtn" aria-label="Следующий слайд">›</button>
+  </div>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"], ["$", "$"]],
+        displayMath: [["\\[", "\\]"]]
+      },
+      chtml: {
+        scale: 0.95
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const progressBar = document.getElementById("progressBar");
+    const counters = document.querySelectorAll(".slide-counter");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    let current = 0;
+
+    function render() {
+      slides.forEach((slide, index) => {
+        slide.classList.toggle("active", index === current);
+      });
+      const progress = ((current + 1) / slides.length) * 100;
+      progressBar.style.width = `${progress}%`;
+      counters.forEach((node) => {
+        node.textContent = `${current + 1} / ${slides.length}`;
+      });
+      document.title = `${slides[current].dataset.title} — Модель окисления железа`;
+    }
+
+    function next() {
+      current = Math.min(current + 1, slides.length - 1);
+      render();
+    }
+
+    function prev() {
+      current = Math.max(current - 1, 0);
+      render();
+    }
+
+    prevBtn.addEventListener("click", prev);
+    nextBtn.addEventListener("click", next);
+
+    document.addEventListener("keydown", (event) => {
+      if (["ArrowRight", "PageDown", " ", "Enter"].includes(event.key)) {
+        event.preventDefault();
+        next();
+      }
+      if (["ArrowLeft", "PageUp", "Backspace"].includes(event.key)) {
+        event.preventDefault();
+        prev();
+      }
+      if (event.key === "Home") {
+        current = 0;
+        render();
+      }
+      if (event.key === "End") {
+        current = slides.length - 1;
+        render();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

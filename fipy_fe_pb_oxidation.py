@@ -77,11 +77,11 @@ def C_Fe_s(T: float) -> float:
 
 
 def D_O_Pb(T: float) -> float:
-    return 6.019546e-10
+    return 1.0e-4 * 2.79e-3 * math.exp(-45587.0 / (R * T))
 
 
 def D_Fe_Pb(T: float) -> float:
-    return 1.315906e-09
+    return 4.898e-7 * math.exp(-43934.77 / 8.31 / T)
 
 
 class Fe3O4Solid:
